@@ -172,8 +172,12 @@ extension CanvistView: UITextInput {
     let start = offset(position)
 
     switch direction {
-    case .left, .up: return CanvistTextRange(max(start - 1, 0)..<start)
-    default: return CanvistTextRange(start..<min(start + 1, Int(editor.textLength())))
+    case .left, .up:
+      let length = trailingGraphemeLength(endingAt: start)
+      return CanvistTextRange((start - length)..<start)
+    default:
+      let length = leadingGraphemeLength(at: start)
+      return CanvistTextRange(start..<(start + length))
     }
   }
 
@@ -225,10 +229,24 @@ extension CanvistView: UITextInput {
     guard let position = closestPosition(to: point) else { return nil }
 
     let start = offset(position)
-    let text = editor.textIn(range: OffsetRange(start: UInt32(start), end: UInt32(start + 2)))
-    let length = text.first.map { String($0).utf16.count } ?? 0
 
-    return CanvistTextRange(start..<start + length)
+    return CanvistTextRange(start..<(start + leadingGraphemeLength(at: start)))
+  }
+
+  /// UTF-16 length of the grapheme cluster that begins at `start`.
+  private func leadingGraphemeLength(at start: Int) -> Int {
+    let documentEnd = Int(editor.textLength())
+
+    return GraphemeSpan.leadingLength(at: start, utf16Length: documentEnd) { start, end in
+      self.editor.textIn(range: OffsetRange(start: UInt32(start), end: UInt32(end)))
+    }
+  }
+
+  /// UTF-16 length of the grapheme cluster that ends at `end`.
+  private func trailingGraphemeLength(endingAt end: Int) -> Int {
+    GraphemeSpan.trailingLength(endingAt: end) { start, end in
+      editor.textIn(range: OffsetRange(start: UInt32(start), end: UInt32(end)))
+    }
   }
 
   // MARK: Conversions
