@@ -1,0 +1,26 @@
+name: Linux
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Parse sources and test grapheme spans
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Swift
+        run: bash scripts/install-swift.sh
+
+      - name: Parse Swift sources
+        run: swiftc -parse Sources/Canvist/*.swift
+
+      - name: Test grapheme spans
+        run: swift test --package-path Checks
