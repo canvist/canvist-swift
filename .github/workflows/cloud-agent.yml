@@ -1,0 +1,23 @@
+name: Cloud agent checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Install, parse, and lint
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Swift and verify the XCFramework
+        run: bash scripts/cloud-agent-install.sh
+
+      - name: Parse, lint, and run Linux tests
+        run: bash scripts/linux-check.sh
