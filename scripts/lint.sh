@@ -13,4 +13,10 @@ mapfile -d '' files < <(
     -print0
 )
 
-swift-format lint --strict "${files[@]}"
+# GitHub-hosted Ubuntu has Swift, but not always `swift-format` on PATH.
+# `swift format` is the same tool.
+if command -v swift-format >/dev/null 2>&1; then
+  swift-format lint --strict "${files[@]}"
+else
+  swift format lint --strict "${files[@]}"
+fi
